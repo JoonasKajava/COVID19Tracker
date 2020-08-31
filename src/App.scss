@@ -1,0 +1,72 @@
+:root {
+  --color-primary-0: #081a30;
+  --color-primary-1: #285795;
+  --color-primary-2: #45a2b5;
+  --color-primary-3: #45a2b5;
+  --color-primary-4: #e5eff6;
+}
+
+html {
+  background-color: var(--color-primary-4);
+}
+
+.container {
+  max-width: 900px;
+  margin: 0px auto;
+}
+
+.button {
+  padding: 0.5rem 1rem;
+  display: inline-flex;
+  cursor: pointer;
+  color: white;
+  background-color: var(--color-primary-1);
+  transition: all 0.2s;
+  .material-icons {
+    margin-left: 0.5rem;
+    transform: scale(0.8);
+  }
+}
+.button:hover {
+  background-color: var(--color-primary-2);
+}
+
+.dropdown {
+  background-color: var(--color-primary-1);
+  position: relative;
+  .handle,
+  .item-list > li {
+    padding: 0.5rem 1rem;
+  }
+
+  .handle {
+    display: inline-flex;
+    > .material-icons {
+      margin-left: 0.5rem;
+    }
+  }
+  display: inline-block;
+  cursor: pointer;
+  color: white;
+  transition: 0.2 all;
+  .item-list {
+    background-color: var(--color-primary-1);
+    z-index: 999;
+    position: absolute;
+    min-width: 100%;
+    display: none;
+  }
+  &:hover {
+    .item-list {
+      display: block;
+    }
+  }
+  .item-list > li:hover,
+  li.active {
+    background-color: var(--color-primary-2);
+  }
+}
+
+.map-info-container {
+  background-color: var(--color-primary-0);
+}
