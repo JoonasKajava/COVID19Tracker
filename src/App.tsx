@@ -1,8 +1,8 @@
 import React from 'react';
 import './css/tailwind.css';
 import './App.scss';
-import { getGeoLocation, reverseGeocoding } from './scripts/geolocation';
-import { IAppState, IGeocodingFeature } from './react-app-env';
+import { getGeoLocation } from './scripts/geolocation';
+import { IAppState, IStatusBoxLoader } from './react-app-env';
 import { MapBox } from './components/map/mapbox';
 import { getCOVIDSummary } from './scripts/api';
 
@@ -20,27 +20,37 @@ class App extends React.PureComponent<any, IAppState> {
       console.log(e);
     });
 
-    getCOVIDSummary().then((result) => {
-      const countries = result.Countries.map((item) => item.CountryCode);
-      let i, j, chunk = 20;
-      let geoData: IGeocodingFeature[] = [];
-      for (i = 0, j = countries.length; i < j; i += chunk) {
-        let temp = countries.slice(i, i + chunk);
-        reverseGeocoding(temp, ['country']).then((countries) => {
-          geoData = geoData.concat(countries.features);
-
-        })
-      }
+    this.setState({
+      loadingCovid: true
+    }, () => {
+      getCOVIDSummary().then((result) => {
+        this.setState({
+          loadingCovid: false,
+          covidStats: result
+        });
+      });
     });
+
   }
 
   render() {
+    var loaders: IStatusBoxLoader[] = [];
+    if(this.state?.loadingCovid) {
+      loaders.push({
+        className:"bg-secondary2",
+        icon: "autorenew",
+        additionalIconClass: "constant-rotation",
+        title: "Loading COVID-19 Statistics"
+      });
+    }
     return (<>
       <div className="container">
         {this.state?.position && <MapBox
           longitude={this.state.position.coords.longitude}
           latitude={this.state.position.coords.latitude}
           zoom={12}
+          loaders={loaders}
+          covidStats={this.state.covidStats}
         />}
       </div>
     </>);

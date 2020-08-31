@@ -4,17 +4,29 @@ import { BoxZoomHandler } from "mapbox-gl";
 
 
 export interface IAppState {
-    position : Position;
+    position: Position;
+    covidStats?: COVID.Stats[];
+    loadingCovid: boolean;
 }
 
 export interface IMapProps {
     latitude: number;
     longitude: number;
     zoom: number;
+    loaders?: IStatusBoxLoader[];
+    covidStats?: COVID.Stats[];
+}
+
+export interface IStatusBoxLoader {
+    icon?: string;
+    additionalIconClass?: string;
+    title: string;
+    className?: string;
 }
 
 export interface IMapState extends IMapProps {
     style: string;
+    dataPoint: string;
     shouldReGeocode: bool;
     geocode: IGeocodingResponse | null;
 }
@@ -23,14 +35,6 @@ export interface IButtonProps {
     onClick?: MouseEventHandler<T>;
     className?: string;
     icon?: string;
-}
-
-
-export interface IInfoBoxProps {
-    latitude: number;
-    longitude: number;
-    zoom: number;
-    geocode?: IGeocodingResponse | null;
 }
 
 export interface IGeocodingResponse {
@@ -45,11 +49,13 @@ export interface IGeocodingFeature {
 }
 
 export interface IDropdownProps {
+    className?: string;
+    autoWidth: boolean;
     defaultSelection: string;
     icon?: string;
     title?: string;
     onChange: (selected: string) => void;
-    items: {[key:string]: IDropdownItem};
+    items: { [key: string]: IDropdownItem };
 }
 
 export interface IDropdownState {
@@ -58,28 +64,43 @@ export interface IDropdownState {
 
 export interface IDropdownItem {
     name: string;
-    icon: string;
+    icon?: string;
 }
 
 namespace COVID {
-    namespace Summary {
-        export interface Stats {
-            NewConfirmed: number;
-            TotalConfirmed: number;
-            NewDeaths: number;
-            TotalDeaths: number;
-            NewRecovered: number;
-            TotalRecovered
-        }
-        export interface CountryStats extends Stats {
-            Country: string;
-            CountryCode: string;
-            Slug: string;
-            Date: string;
-        }
-        export interface Result {
-            Global: Stats;
-            Countries: CountryStats[];
-        }
+    export interface Stats {
+        Country: string,
+        CountryCode: string,
+        Lat: string,
+        Lon: string,
+        Confirmed: number,
+        Deaths: number,
+        Recovered: number,
+        Active: number,
+        Date: string,
+        LocationID: string
+    }
+}
+
+export interface ISettings {
+    mapbox: string;
+}
+
+export interface IStatusBox {
+    className?: string;
+}
+
+export interface GeoJSONWrapper {
+    data: {[key: string]: GeoJSON.FeatureCollection<GeoJSON.Geometry>};
+    totals: {[key: string]: number[]}
+}
+export interface ISimpleDate {
+    year: number;
+    day: number;
+    month: number;
+}
+declare global {
+    interface Date {
+        addDays: (days: number) => Date;
     }
 }

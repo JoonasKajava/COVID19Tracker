@@ -22,6 +22,11 @@ module.exports = {
       primary2: '#45A2B5',
       primary3: '#45A2B5',
       primary4: '#E5EFF6',
+      secondary0: '#F7F7F5',
+      secondary1: '#D6868E',
+      secondary2: '#E24354',
+      secondary3: '#BC3E52',
+      secondary4: '#352334',
       gray: {
         100: '#f7fafc',
         200: '#edf2f7',
