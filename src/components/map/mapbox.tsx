@@ -6,7 +6,6 @@ import { Button } from "../button/button";
 import { reverseGeocodingFromCoords } from "../../scripts/geolocation";
 import { Dropdown } from "../dropdown/dropdown";
 import { StatusBox } from "./statusBox";
-import GeoJSON from "geojson";
 import { average, mapCovidToGeoJSON, dateKey } from "../../scripts/utilities";
 import { addClusterLayer, addPointLayer, addCountLayer } from "../../scripts/mapboxUtilities";
 
@@ -82,9 +81,12 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
 
         
         let dateCounter = new Date(2020, 1,1);
-        setInterval(() => {
+        var updateInterval = setInterval(() => {
             if(!this.GeoJSONData) return;
-            if(this.GeoJSONData)(this.map?.getSource('covid') as GeoJSONSource).setData(this.GeoJSONData.data[dateKey(dateCounter)]);
+            const data = this.GeoJSONData.data[dateKey(dateCounter)];
+            if(!data) clearInterval(updateInterval);
+            console.log(data);
+            if(this.GeoJSONData)(this.map?.getSource('covid') as GeoJSONSource).setData(data);
             dateCounter = dateCounter.addDays(1);
         }, 1000);
     }
