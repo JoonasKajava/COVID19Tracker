@@ -26,6 +26,9 @@ export interface IStatusBoxLoader {
 
 export interface IMapState extends IMapProps {
     style: string;
+    selectedDate: Date;
+    earliestDatePoint?: Date;
+    latestDatePoint?: Date;
     dataPoint: string;
     shouldReGeocode: bool;
     geocode: IGeocodingResponse | null;
@@ -103,4 +106,11 @@ declare global {
     interface Date {
         addDays: (days: number) => Date;
     }
+}
+
+
+export interface ITimeSelectorProps {
+    currentTime: Date;
+    startDate: Date;
+    endDate: Date;
 }

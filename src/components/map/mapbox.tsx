@@ -8,6 +8,7 @@ import { Dropdown } from "../dropdown/dropdown";
 import { StatusBox } from "./statusBox";
 import { average, mapCovidToGeoJSON, dateKey } from "../../scripts/utilities";
 import { addClusterLayer, addPointLayer, addCountLayer } from "../../scripts/mapboxUtilities";
+import { TimeSelector } from "./timeSelectort";
 
 export class MapBox extends React.PureComponent<IMapProps, IMapState> {
     container: any = null;
@@ -37,7 +38,8 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
             style: 'streets-v11',
             dataPoint: 'confirmed',
             shouldReGeocode: true,
-            geocode: null
+            geocode: null,
+            selectedDate: new Date()
         }
 
     }
@@ -54,7 +56,7 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
         const markerIcon = document.createElement('span');
         markerIcon.className = 'material-icons';
         markerIcon.innerText = 'home';
-        const marker = new mapboxgl.Marker({
+        new mapboxgl.Marker({
             element: markerIcon
         }).setLngLat([this.props.longitude, this.props.latitude]).addTo(this.map);
 
@@ -79,22 +81,31 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
             });
         }, this.geocodeUpdateFrequency);
 
-        
-        let dateCounter = new Date(2020, 1,1);
         var updateInterval = setInterval(() => {
-            if(!this.GeoJSONData) return;
-            const data = this.GeoJSONData.data[dateKey(dateCounter)];
-            if(!data) clearInterval(updateInterval);
-            console.log(data);
-            if(this.GeoJSONData)(this.map?.getSource('covid') as GeoJSONSource).setData(data);
-            dateCounter = dateCounter.addDays(1);
+            if (!this.GeoJSONData) return;
+            const data = this.GeoJSONData.data[dateKey(this.state.selectedDate)];
+            if (this.state.selectedDate > this.state.latestDatePoint!) clearInterval(updateInterval);
+            if (this.GeoJSONData) (this.map?.getSource('covid') as GeoJSONSource).setData(data);
+            this.setState({
+                selectedDate: this.state.selectedDate.addDays(1)
+            });
         }, 1000);
     }
     componentDidUpdate() {
         if (!this.props.covidStats || this.map?.getSource('covid')) return;
-        const date = new Date();
         this.GeoJSONData = mapCovidToGeoJSON(this.props.covidStats);
-        console.dir(this.GeoJSONData.data[dateKey(new Date(2020, 7, 20))]);
+        const dates = Object.keys(this.GeoJSONData.data).map((key) => {
+            let split = key.split("-");
+            return new Date(+split[0], +split[1], +split[2]);
+        }).sort((a,b) => a.getTime()-b.getTime());
+        console.log(dates);
+        const start = dates[0];
+        const end = dates[dates.length - 1];
+        this.setState({
+            selectedDate: start,
+            earliestDatePoint: start,
+            latestDatePoint: end
+        });
         this.map?.addSource('covid', {
             type: 'geojson',
             cluster: true,
@@ -165,7 +176,7 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
                     }
                 </div>
             </div>
-            <div>
+            <div className="relative">
                 <div className="grid gap-4 absolute m-4 z-10">
                     <StatusBox className="bg-primary0">
                         <div style={{ gridTemplateColumns: "auto auto" }} className="grid gap-y-2 gap-x-4 text-xs">
@@ -187,6 +198,13 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
                 </div>
                 <div className="w-full" style={{ height: '50vh' }} ref={el => this.container = el}></div>
             </div>
+            {this.state.earliestDatePoint && this.state.latestDatePoint &&
+                <TimeSelector
+                    currentTime={this.state.selectedDate}
+                    startDate={this.state.earliestDatePoint}
+                    endDate={this.state.latestDatePoint}
+                />}
+
         </div>
     }
 }
