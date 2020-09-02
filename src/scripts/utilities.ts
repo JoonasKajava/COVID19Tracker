@@ -4,7 +4,6 @@ import { totalmem } from "os";
 
 export function median(values: number[]): number {
     const sorted = values.sort((a, b) => a - b);
-    console.dir(JSON.stringify(values));
     const mid = Math.ceil(values.length / 2);
     return values.length % 2 === 0 ? (sorted[mid] + sorted[mid - 1]) / 2 : sorted[mid - 1];
 }
@@ -56,6 +55,10 @@ export function mapCovidToGeoJSON(stats: COVID.Stats[]): GeoJSONWrapper {
 
 export function dateKey(date: Date) {
     return [date.getFullYear(), date.getMonth(), date.getDate()].join("-");
+}
+
+export function clamp(value: number, min:number, max: number) {
+    return Math.min(max, Math.max(min, value));
 }
 
 Date.prototype.addDays = function (days: number) {

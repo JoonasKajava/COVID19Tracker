@@ -25,8 +25,13 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
         'recovered': { name: 'Recovered', icon: 'emoji_people' },
         'active': { name: 'Active', icon: 'coronavirus' }
     };
+    timeFlowSelections: {[key: string]: IDropdownItem} = {
+        'auto': {name:'Auto', icon:'update'},
+        'manual': {name: 'Manual', icon:'sync_alt'}
+    }
     steps: (string | number)[] = [];
     GeoJSONData: GeoJSONWrapper | null = null;
+    sortedDateKeys: string[] = [];
     geocodeUpdateFrequency = 2000;
 
     constructor(props: IMapProps) {
@@ -39,7 +44,8 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
             dataPoint: 'confirmed',
             shouldReGeocode: true,
             geocode: null,
-            selectedDate: new Date()
+            selectedDate: new Date(),
+            timeFlow: 'manual'
         }
 
     }
@@ -82,14 +88,20 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
         }, this.geocodeUpdateFrequency);
 
         var updateInterval = setInterval(() => {
-            if (!this.GeoJSONData) return;
-            const data = this.GeoJSONData.data[dateKey(this.state.selectedDate)];
+            if (!this.GeoJSONData || this.state.timeFlow !== 'auto') return;
             if (this.state.selectedDate > this.state.latestDatePoint!) clearInterval(updateInterval);
-            if (this.GeoJSONData) (this.map?.getSource('covid') as GeoJSONSource).setData(data);
+            this.setData(dateKey(this.state.selectedDate));
             this.setState({
                 selectedDate: this.state.selectedDate.addDays(1)
             });
         }, 1000);
+    }
+
+    setData(key: string) {
+        if (!this.GeoJSONData) return;
+        const data = this.GeoJSONData.data[key];
+        if (!data) return;
+        (this.map?.getSource('covid') as GeoJSONSource).setData(data);
     }
     componentDidUpdate() {
         if (!this.props.covidStats || this.map?.getSource('covid')) return;
@@ -97,8 +109,8 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
         const dates = Object.keys(this.GeoJSONData.data).map((key) => {
             let split = key.split("-");
             return new Date(+split[0], +split[1], +split[2]);
-        }).sort((a,b) => a.getTime()-b.getTime());
-        console.log(dates);
+        }).sort((a, b) => a.getTime() - b.getTime());
+        this.sortedDateKeys = dates.map((data) => dateKey(data));
         const start = dates[0];
         const end = dates[dates.length - 1];
         this.setState({
@@ -148,6 +160,24 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
         });
     }
 
+    onDateChange(percent: number) {
+        if (!this.GeoJSONData) return;
+        const spot = Math.ceil((this.sortedDateKeys.length - 1) * ((100 - percent) / 100));
+        const key = this.sortedDateKeys[spot];
+        this.setData(key);
+        const split = key?.split("-");
+        if (!split) return;
+        const d = new Date(+split[0], +split[1], +split[2]);
+        this.setState({
+            selectedDate: d
+        });
+    }
+    onTimeFlowChange(key:string) {
+        this.setState({
+            timeFlow: key as 'auto' |'manual'
+        });
+    }
+
     render() {
         return <div>
             <div>
@@ -166,12 +196,23 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
                     {this.props.covidStats &&
                         <Dropdown
                             autoWidth={false}
-                            className="w-40"
+                            className="w-40 mr-2"
                             title="Data point"
                             icon="info"
                             defaultSelection={this.state.dataPoint}
                             items={this.dataPoints}
                             onChange={this.setDataPoint.bind(this)}
+                        />
+                    }
+                    {this.props.covidStats &&
+                        <Dropdown
+                        autoWidth={false}
+                        className="w-36"
+                        title="Time flow"
+                        icon="schedule"
+                        defaultSelection={this.state.timeFlow}
+                        items={this.timeFlowSelections}
+                        onChange={this.onTimeFlowChange.bind(this)}
                         />
                     }
                 </div>
@@ -196,13 +237,14 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
                         </StatusBox>
                     })}
                 </div>
-                <div className="w-full" style={{ height: '50vh' }} ref={el => this.container = el}></div>
+                <div className="w-full" style={{ height: '400px' }} ref={el => this.container = el}></div>
             </div>
             {this.state.earliestDatePoint && this.state.latestDatePoint &&
                 <TimeSelector
                     currentTime={this.state.selectedDate}
                     startDate={this.state.earliestDatePoint}
                     endDate={this.state.latestDatePoint}
+                    onSliderDrag={this.onDateChange.bind(this)}
                 />}
 
         </div>

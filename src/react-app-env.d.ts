@@ -27,6 +27,7 @@ export interface IStatusBoxLoader {
 export interface IMapState extends IMapProps {
     style: string;
     selectedDate: Date;
+    timeFlow: 'auto' | 'manual';
     earliestDatePoint?: Date;
     latestDatePoint?: Date;
     dataPoint: string;
@@ -113,4 +114,10 @@ export interface ITimeSelectorProps {
     currentTime: Date;
     startDate: Date;
     endDate: Date;
+    onSliderDrag?: (percent: number) => void;
+}
+
+export interface ITimeSelectorState {
+    isDragging: boolean;
+    sliderPosPercentage: number;
 }
