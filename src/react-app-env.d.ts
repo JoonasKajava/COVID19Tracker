@@ -4,9 +4,17 @@ import { BoxZoomHandler } from "mapbox-gl";
 
 
 export interface IAppState {
-    position: Position;
+    position?: Position;
     covidStats?: COVID.Stats[];
     loadingCovid: boolean;
+    errors?: IAppError[];
+}
+
+export interface IAppError {
+    id: 'covidStats';
+    timestamp: Date;
+    retryIn: number;
+    title: string;
 }
 
 export interface IMapProps {
