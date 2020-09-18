@@ -25,7 +25,8 @@
     "build:style": "tailwindcss build src/index.css -o src/css/tailwind.css",
     "start": "craco start",
     "build": "craco build",
-    "eject": "craco eject"
+    "eject": "craco eject",
+    "prestart": "node cacheStats.js"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -46,6 +47,7 @@
     "@fullhuman/postcss-purgecss": "^2.3.0",
     "@types/mapbox-gl": "^1.11.2",
     "autoprefixer": "^9.8.6",
+    "node-fetch": "^2.6.1",
     "postcss-cli": "^7.1.1"
   }
 }
