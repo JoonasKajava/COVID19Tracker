@@ -10,6 +10,7 @@ import { average, mapCovidToGeoJSON, dateKey } from "../../scripts/utilities";
 import { addClusterLayer, addPointLayer, addCountLayer } from "../../scripts/mapboxUtilities";
 import { TimeSelector } from "./timeSelector";
 import { covidDatapoints } from "../../scripts/constants";
+import { Statistics } from "../statistics/statistics";
 
 export class MapBox extends React.PureComponent<IMapProps, IMapState> {
     container: any = null;
@@ -95,6 +96,9 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
     setData(key: string) {
         if (!this.GeoJSONData) return;
         const data = this.GeoJSONData.data[key];
+        this.setState({
+            currentData: data
+        });
         if (!data) return;
         (this.map?.getSource('covid') as GeoJSONSource).setData(data);
     }
@@ -111,12 +115,13 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
         this.setState({
             selectedDate: start,
             earliestDatePoint: start,
-            latestDatePoint: end
+            latestDatePoint: end,
+            currentData:this.GeoJSONData.data[dateKey(new Date(2020, 7, 20))]
         });
         this.map?.addSource('covid', {
             type: 'geojson',
             cluster: true,
-            data: this.GeoJSONData.data[dateKey(new Date(2020, 7, 20))],
+            data: this.state.currentData,
             clusterMaxZoom: 15,
             clusterProperties: {
                 'confirmed': ['+', ['get', 'confirmed']],
@@ -241,7 +246,9 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
                     endDate={this.state.latestDatePoint}
                     onSliderDrag={this.onDateChange.bind(this)}
                 />}
-
+            {this.state.covidStats && this.state.currentData &&
+            <Statistics data={this.state.currentData} dataPoint={covidDatapoints[this.state.dataPoint]} />
+            }
         </div>
     }
 }

@@ -41,6 +41,7 @@ export interface IMapState extends IMapProps {
     dataPoint: string;
     shouldReGeocode: bool;
     geocode: IGeocodingResponse | null;
+    currentData?: GeoJSON.FeatureCollection<GeoJSON.Geometry>;
 }
 
 export interface IButtonProps {
@@ -135,12 +136,16 @@ export interface ITimeSelectorState {
     sliderPosPercentage: number;
 }
 
+export interface IStatisticsProps {
+    data: GeoJSON.FeatureCollection<GeoJSON.Geometry>;
+    dataPoint: ICovidDatapoint;
+}
 
 export interface IStatisticProps {
-    data: COVID.Stats;
+    data: GeoJSON.Feature<GeoJSON.Geometry>;
     dataPoint: ICovidDatapoint;
 }
 
 export interface IStatisticState {
-    previousData: COVID.Stats;
+    previousData: GeoJSON.Feature<GeoJSON.Geometry>;
 }

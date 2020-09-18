@@ -13,13 +13,13 @@ export class Statistic extends React.PureComponent<IStatisticProps, IStatisticSt
     render() {
         return <div>
             <div>
-                {this.props.data.Country}
+                {this.props.data.properties!['country']}
             </div>
             <div>
-                {(this.state.previousData as any)[this.props.dataPoint.name]}
+                {this.state.previousData.properties![this.props.dataPoint.name]}
             </div>
             <div>
-                {(this.props.data as any)[this.props.dataPoint.name]}
+                {this.props.data.properties![this.props.dataPoint.name]}
             </div>
         </div>
     }
