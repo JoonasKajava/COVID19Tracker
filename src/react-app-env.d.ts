@@ -125,7 +125,22 @@ export interface ITimeSelectorProps {
     onSliderDrag?: (percent: number) => void;
 }
 
+export interface ICovidDatapoint {
+    name: string;
+    icon?: string;
+}
+
 export interface ITimeSelectorState {
     isDragging: boolean;
     sliderPosPercentage: number;
+}
+
+
+export interface IStatisticProps {
+    data: COVID.Stats;
+    dataPoint: ICovidDatapoint;
+}
+
+export interface IStatisticState {
+    previousData: COVID.Stats;
 }

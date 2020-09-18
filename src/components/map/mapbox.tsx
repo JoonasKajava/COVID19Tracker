@@ -8,7 +8,8 @@ import { Dropdown } from "../dropdown/dropdown";
 import { StatusBox } from "./statusBox";
 import { average, mapCovidToGeoJSON, dateKey } from "../../scripts/utilities";
 import { addClusterLayer, addPointLayer, addCountLayer } from "../../scripts/mapboxUtilities";
-import { TimeSelector } from "./timeSelectort";
+import { TimeSelector } from "./timeSelector";
+import { covidDatapoints } from "../../scripts/constants";
 
 export class MapBox extends React.PureComponent<IMapProps, IMapState> {
     container: any = null;
@@ -18,12 +19,6 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
         'streets-v11': { name: 'Streets', icon: '' },
         'outdoors-v11': { name: 'Outdoors', icon: '' },
         'satellite-streets-v11': { name: 'Satellite', icon: '' }
-    };
-    dataPoints: { [key: string]: IDropdownItem } = {
-        'confirmed': { name: 'Confirmed', icon: 'done' },
-        'deaths': { name: 'Deaths', icon: 'sentiment_very_dissatisfied' },
-        'recovered': { name: 'Recovered', icon: 'emoji_people' },
-        'active': { name: 'Active', icon: 'coronavirus' }
     };
     timeFlowSelections: {[key: string]: IDropdownItem} = {
         'auto': {name:'Auto', icon:'update'},
@@ -200,7 +195,7 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
                             title="Data point"
                             icon="info"
                             defaultSelection={this.state.dataPoint}
-                            items={this.dataPoints}
+                            items={covidDatapoints}
                             onChange={this.setDataPoint.bind(this)}
                         />
                     }
