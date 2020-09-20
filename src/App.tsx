@@ -20,6 +20,21 @@ class App extends React.PureComponent<any, IAppState> {
       this.setState({
         position: position });
     }).catch((e) => {
+      // Fake position
+      this.setState({
+        position: {
+          coords: {
+            latitude: 60.166133,
+            longitude: 24.937984,
+            accuracy: 10,
+            altitude: 10,
+            altitudeAccuracy: 10,
+            heading: 0,
+            speed: 0
+          },
+          timestamp: Date.now()
+        }
+      })
       console.log(e);
     });
 
@@ -94,6 +109,9 @@ class App extends React.PureComponent<any, IAppState> {
           loaders={loaders}
           covidStats={this.state.covidStats}
         />}
+        <div className="flex justify-center my-16">
+            <a href="https://github.com/JoonasKajava/COVID19Tracker"><img className="inline-block h-16" src="./img/GitHub_Logo.png"/><img className="inline-block h-16" src="./img/GitHub-Mark-64px.png"/></a>
+        </div>
       </div>
     </>);
   }

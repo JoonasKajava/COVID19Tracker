@@ -42,6 +42,7 @@ export interface IMapState extends IMapProps {
     shouldReGeocode: bool;
     geocode: IGeocodingResponse | null;
     currentData?: GeoJSON.FeatureCollection<GeoJSON.Geometry>;
+    distinctCountries?: string[]
 }
 
 export interface IButtonProps {
@@ -82,16 +83,17 @@ export interface IDropdownItem {
 
 namespace COVID {
     export interface Stats {
-        Country: string,
-        CountryCode: string,
-        Lat: string,
-        Lon: string,
-        Confirmed: number,
-        Deaths: number,
-        Recovered: number,
-        Active: number,
-        Date: string,
-        LocationID: string
+        Country: string;
+        Province: string;
+        CountryCode: string;
+        Lat: string;
+        Lon: string;
+        Confirmed: number;
+        Deaths: number;
+        Recovered: number;
+        Active: number;
+        Date: string;
+        LocationID: string;
     }
 }
 
@@ -148,4 +150,19 @@ export interface IStatisticProps {
 
 export interface IStatisticState {
     previousData: GeoJSON.Feature<GeoJSON.Geometry>;
+}
+
+
+export interface ITextInputProps {
+    onChange?: (value:string) => void;
+    onComplete?: (value: string) => void;
+    autoCompleteValues?: string[];
+    icon?: string;
+    className?: string;
+}
+
+export interface ITextInputState {
+    value: string;
+    selectedIndex: number;
+    autoComplete?: string[];
 }

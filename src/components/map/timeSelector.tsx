@@ -19,7 +19,7 @@ export class TimeSelector extends React.PureComponent<ITimeSelectorProps, ITimeS
         document.addEventListener('mousemove', (ev: MouseEvent) => {
             if(!this.state.isDragging || !this.slider.current) return;
             const relative = ev.pageX - this.slider.current.offsetLeft;
-            const percent = clamp((100 - relative / this.slider.current.scrollWidth * 100), 0, 100);
+            const percent = clamp((100 - relative / this.slider.current.offsetWidth * 100), 0, 100);
             this.setState({
                 sliderPosPercentage: percent
             }, () => {if(this.props.onSliderDrag)this.props.onSliderDrag(this.state.sliderPosPercentage)});

@@ -301,6 +301,7 @@ module.exports = {
     }),
     inset: {
       '0': '0',
+      '100': '100%',
       auto: 'auto',
     },
     letterSpacing: {

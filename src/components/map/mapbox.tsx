@@ -1,7 +1,7 @@
 import React from "react";
 import mapboxgl, { GeoJSONSource } from 'mapbox-gl';
 import { settings } from "../../settings";
-import { IMapProps, IMapState, IDropdownItem, ISimpleDate, GeoJSONWrapper } from "../../react-app-env";
+import { IMapProps, IMapState, IDropdownItem, GeoJSONWrapper } from "../../react-app-env";
 import { Button } from "../button/button";
 import { reverseGeocodingFromCoords } from "../../scripts/geolocation";
 import { Dropdown } from "../dropdown/dropdown";
@@ -10,7 +10,7 @@ import { average, mapCovidToGeoJSON, dateKey } from "../../scripts/utilities";
 import { addClusterLayer, addPointLayer, addCountLayer } from "../../scripts/mapboxUtilities";
 import { TimeSelector } from "./timeSelector";
 import { covidDatapoints } from "../../scripts/constants";
-import { Statistics } from "../statistics/statistics";
+import { TextInput } from "../textInput/textInput";
 
 export class MapBox extends React.PureComponent<IMapProps, IMapState> {
     container: any = null;
@@ -21,9 +21,9 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
         'outdoors-v11': { name: 'Outdoors', icon: '' },
         'satellite-streets-v11': { name: 'Satellite', icon: '' }
     };
-    timeFlowSelections: {[key: string]: IDropdownItem} = {
-        'auto': {name:'Auto', icon:'update'},
-        'manual': {name: 'Manual', icon:'sync_alt'}
+    timeFlowSelections: { [key: string]: IDropdownItem } = {
+        'auto': { name: 'Auto', icon: 'update' },
+        'manual': { name: 'Manual', icon: 'sync_alt' }
     }
     steps: (string | number)[] = [];
     GeoJSONData: GeoJSONWrapper | null = null;
@@ -41,7 +41,7 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
             shouldReGeocode: true,
             geocode: null,
             selectedDate: new Date(),
-            timeFlow: 'manual'
+            timeFlow: 'auto'
         }
 
     }
@@ -61,8 +61,6 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
         new mapboxgl.Marker({
             element: markerIcon
         }).setLngLat([this.props.longitude, this.props.latitude]).addTo(this.map);
-
-
 
         this.map.on('move', () => {
             let center = this.map?.getCenter() || { lng: this.props.longitude, lat: this.props.latitude };
@@ -85,7 +83,7 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
 
         var updateInterval = setInterval(() => {
             if (!this.GeoJSONData || this.state.timeFlow !== 'auto') return;
-            if (this.state.selectedDate > this.state.latestDatePoint!) clearInterval(updateInterval);
+            if (this.state.selectedDate > this.state.latestDatePoint!) this.setState({ selectedDate: this.state.earliestDatePoint! });
             this.setData(dateKey(this.state.selectedDate));
             this.setState({
                 selectedDate: this.state.selectedDate.addDays(1)
@@ -94,13 +92,14 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
     }
 
     setData(key: string) {
-        if (!this.GeoJSONData) return;
+        if (!this.GeoJSONData || !this.map?.isStyleLoaded()) return;
         const data = this.GeoJSONData.data[key];
         this.setState({
             currentData: data
         });
         if (!data) return;
-        (this.map?.getSource('covid') as GeoJSONSource).setData(data);
+        (this.map?.getSource('covid') as GeoJSONSource)?.setData(data);
+
     }
     componentDidUpdate() {
         if (!this.props.covidStats || this.map?.getSource('covid')) return;
@@ -112,16 +111,19 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
         this.sortedDateKeys = dates.map((data) => dateKey(data));
         const start = dates[0];
         const end = dates[dates.length - 1];
+        const data = this.GeoJSONData.data[dateKey(new Date(2020, 7, 20))];
+        const allCountries = this.props.covidStats.map((stat) => stat.Country);
         this.setState({
             selectedDate: start,
             earliestDatePoint: start,
             latestDatePoint: end,
-            currentData:this.GeoJSONData.data[dateKey(new Date(2020, 7, 20))]
+            currentData: data,
+            distinctCountries: Array.from(new Set(allCountries))
         });
         this.map?.addSource('covid', {
             type: 'geojson',
             cluster: true,
-            data: this.state.currentData,
+            data: data,
             clusterMaxZoom: 15,
             clusterProperties: {
                 'confirmed': ['+', ['get', 'confirmed']],
@@ -130,14 +132,19 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
                 'active': ['+', ['get', 'active']]
             }
         });
-
         this.setDataPoint(this.state.dataPoint);
 
     }
     centerMap() {
-        this.map?.setCenter([this.props.longitude, this.props.latitude]);
+        this.map?.flyTo({
+            center: [this.props.longitude, this.props.latitude],
+            zoom: 12
+        });
     }
     setStyle(key: string) {
+        // Prevent crash
+        if(this.map?.isMoving()) return;
+        
         this.setState({
             style: key
         }, () => this.map?.setStyle(this.stylePrefix + key));
@@ -172,21 +179,31 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
             selectedDate: d
         });
     }
-    onTimeFlowChange(key:string) {
+    onTimeFlowChange(key: string) {
         this.setState({
-            timeFlow: key as 'auto' |'manual'
+            timeFlow: key as 'auto' | 'manual'
+        });
+    }
+
+    onCountrySelect(value: string) {
+        var result = this.props.covidStats?.filter((filter) => filter.Country === value && filter.Province === "")[0];
+        console.log(result);
+        if (!result) return;
+        this.map?.flyTo({
+            center: [+result.Lon, +result.Lat],
+            zoom: 4
         });
     }
 
     render() {
         return <div>
             <div>
-                <h3>Map controls</h3>
-                <div className="py-2">
-                    <Button icon="my_location" onClick={this.centerMap.bind(this)} className="mr-2">Home</Button>
+                <h1 className="my-8">COVID-19 Tracker</h1>
+                <div className="py-2 flex md:justify-between flex-wrap">
+                    <Button icon="my_location" onClick={this.centerMap.bind(this)} className="mr-2 my-2 md:my-0 w-full md:w-auto justify-between">Home</Button>
                     <Dropdown
-                        autoWidth={true}
-                        className="mr-2"
+                        autoWidth={false}
+                        className="mr-2 my-2 md:my-0 w-full md:w-40"
                         title="Style"
                         icon="map"
                         defaultSelection={this.state.style}
@@ -194,26 +211,27 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
                         onChange={this.setStyle.bind(this)}
                     />
                     {this.props.covidStats &&
-                        <Dropdown
-                            autoWidth={false}
-                            className="w-40 mr-2"
-                            title="Data point"
-                            icon="info"
-                            defaultSelection={this.state.dataPoint}
-                            items={covidDatapoints}
-                            onChange={this.setDataPoint.bind(this)}
-                        />
-                    }
-                    {this.props.covidStats &&
-                        <Dropdown
-                        autoWidth={false}
-                        className="w-36"
-                        title="Time flow"
-                        icon="schedule"
-                        defaultSelection={this.state.timeFlow}
-                        items={this.timeFlowSelections}
-                        onChange={this.onTimeFlowChange.bind(this)}
-                        />
+                        <>
+                            <Dropdown
+                                autoWidth={false}
+                                className="my-2 md:my-0 mr-2 w-full md:w-40"
+                                title="Data point"
+                                icon="info"
+                                defaultSelection={this.state.dataPoint}
+                                items={covidDatapoints}
+                                onChange={this.setDataPoint.bind(this)}
+                            />
+                            <Dropdown
+                                autoWidth={false}
+                                className="my-2 md:my-0 mr-2 w-full md:w-40"
+                                title="Time flow"
+                                icon="schedule"
+                                defaultSelection={this.state.timeFlow}
+                                items={this.timeFlowSelections}
+                                onChange={this.onTimeFlowChange.bind(this)}
+                            />
+                            <TextInput icon="search" className="my-2 md:my-0 w-full md:w-auto" autoCompleteValues={this.state.distinctCountries} onComplete={this.onCountrySelect.bind(this)} />
+                        </>
                     }
                 </div>
             </div>
@@ -246,9 +264,6 @@ export class MapBox extends React.PureComponent<IMapProps, IMapState> {
                     endDate={this.state.latestDatePoint}
                     onSliderDrag={this.onDateChange.bind(this)}
                 />}
-            {this.state.covidStats && this.state.currentData &&
-            <Statistics data={this.state.currentData} dataPoint={covidDatapoints[this.state.dataPoint]} />
-            }
         </div>
     }
 }

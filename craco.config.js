@@ -5,7 +5,7 @@ module.exports = ({ env }) => {
     return {
         style: {
             postcss: {
-                plugins: [
+                plugins: env !== 'development' ? [
                     purgecss({
                         content: ['./src/**/*.html', './src/**/*.tsx', './src/**/*.ts'],
                         defaultExtractor: content => {
@@ -18,7 +18,7 @@ module.exports = ({ env }) => {
                             return broadMatches.concat(innerMatches)
                           }
                     })
-                ]
+                ] : []
             }
         }
     };
